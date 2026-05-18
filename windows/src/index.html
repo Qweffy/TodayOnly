@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TodayOnly</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Rollover screen -->
+  <div id="rollover" class="rollover-screen hidden">
+    <h2>Unfinished from yesterday</h2>
+    <p class="subtitle">What do you want to do with these?</p>
+    <div id="rollover-list"></div>
+    <button id="btn-finish-rollover" class="btn-finish-rollover" disabled>Done Reviewing</button>
+  </div>
+
+  <!-- Main app -->
+  <div id="app">
+    <div class="header">
+      <h1>Today</h1>
+      <button class="btn-add" id="btn-open-add">+</button>
+    </div>
+    <div class="content" id="task-list"></div>
+  </div>
+
+  <!-- Add task modal -->
+  <div id="add-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" id="btn-close-modal">✕</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
