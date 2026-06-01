@@ -5,6 +5,8 @@ struct TaskListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var todayTasks: [TodoTask]
     @State private var showingAddSheet = false
+    @State private var draggedTask: TodoTask?
+    @State private var editingTask: TodoTask?
 
     private let viewModel = TaskListViewModel()
 
@@ -20,11 +22,17 @@ struct TaskListView: View {
     }
 
     private var mustDoTasks: [TodoTask] {
-        todayTasks.filter { $0.category == .mustDo }
+        orderedTasks(in: .mustDo)
     }
 
     private var bonusTasks: [TodoTask] {
-        todayTasks.filter { $0.category == .bonus }
+        orderedTasks(in: .bonus)
+    }
+
+    private func orderedTasks(in category: TaskCategory) -> [TodoTask] {
+        todayTasks
+            .filter { $0.category == category }
+            .sorted { $0.sortIndex != $1.sortIndex ? $0.sortIndex < $1.sortIndex : $0.createdAt < $1.createdAt }
     }
 
     var body: some View {
@@ -49,16 +57,33 @@ struct TaskListView: View {
             .sheet(isPresented: $showingAddSheet) {
                 AddTaskView(
                     onAdd: { title, category, status in
-                        viewModel.addTask(
-                            title: title,
-                            category: category,
-                            status: status,
-                            context: modelContext
-                        )
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            viewModel.addTask(
+                                title: title,
+                                category: category,
+                                status: status,
+                                context: modelContext,
+                                existing: todayTasks
+                            )
+                        }
                         showingAddSheet = false
                     },
                     onCancel: {
                         showingAddSheet = false
+                    }
+                )
+            }
+            .sheet(item: $editingTask) { task in
+                TaskDetailView(
+                    task: task,
+                    onSave: { newTitle, newNotes in
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            viewModel.update(task, title: newTitle, notes: newNotes)
+                        }
+                        editingTask = nil
+                    },
+                    onCancel: {
+                        editingTask = nil
                     }
                 )
             }
@@ -88,6 +113,7 @@ struct TaskListView: View {
                         title: "Must Do",
                         icon: "flame.fill",
                         tint: .orange,
+                        targetCategory: .mustDo,
                         tasks: mustDoTasks
                     )
                 }
@@ -97,11 +123,14 @@ struct TaskListView: View {
                         title: "Bonus",
                         icon: "star.fill",
                         tint: .blue,
+                        targetCategory: .bonus,
                         tasks: bonusTasks
                     )
                 }
             }
             .padding()
+            .animation(.easeInOut(duration: 0.3), value: mustDoTasks.map(\.id))
+            .animation(.easeInOut(duration: 0.3), value: bonusTasks.map(\.id))
         }
     }
 
@@ -109,13 +138,14 @@ struct TaskListView: View {
         title: String,
         icon: String,
         tint: Color,
+        targetCategory: TaskCategory,
         tasks: [TodoTask]
     ) -> some View {
         let pending = tasks.filter { $0.status != .done }
         let done = tasks.filter { $0.status == .done }
+        let allDone = pending.isEmpty && !done.isEmpty
 
         return VStack(alignment: .leading, spacing: 0) {
-            // Section header
             HStack(spacing: 6) {
                 Image(systemName: icon)
                     .foregroundStyle(tint)
@@ -135,35 +165,81 @@ struct TaskListView: View {
             Divider()
                 .padding(.horizontal, 16)
 
-            // Pending tasks
             ForEach(pending) { task in
-                TaskRowView(
-                    task: task,
-                    onToggleDone: { viewModel.toggleDone(task) },
-                    onDelete: { viewModel.delete(task, context: modelContext) }
-                )
-                .padding(.horizontal, 16)
+                taskRow(task)
+                    .draggable(task.id.uuidString) {
+                        dragPreview(task)
+                    }
+                    .dropDestination(for: String.self) { droppedIDs, _ in
+                        guard let idStr = droppedIDs.first,
+                              let uuid = UUID(uuidString: idStr),
+                              uuid != task.id,
+                              let dragged = todayTasks.first(where: { $0.id == uuid }) else {
+                            return false
+                        }
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            if dragged.category == task.category {
+                                viewModel.move(dragged, onto: task, within: pending)
+                            } else {
+                                viewModel.move(dragged, onto: task, into: task.category, within: pending)
+                            }
+                        }
+                        return true
+                    }
             }
 
-            // Done tasks (dimmed)
             if !done.isEmpty {
                 ForEach(done) { task in
-                    TaskRowView(
-                        task: task,
-                        onToggleDone: { viewModel.toggleDone(task) },
-                        onDelete: { viewModel.delete(task, context: modelContext) }
-                    )
-                    .padding(.horizontal, 16)
-                    .opacity(0.6)
+                    taskRow(task)
+                        .opacity(0.6)
                 }
             }
         }
         .padding(.bottom, 12)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(done.count == tasks.count
-                      ? Color.green.opacity(0.08)
-                      : tint.opacity(0.1))
+                .fill(allDone ? Color.green.opacity(0.08) : tint.opacity(0.1))
         )
+        .dropDestination(for: String.self) { droppedIDs, _ in
+            guard let idStr = droppedIDs.first,
+                  let uuid = UUID(uuidString: idStr),
+                  let task = todayTasks.first(where: { $0.id == uuid }),
+                  task.category != targetCategory else {
+                return false
+            }
+            withAnimation(.easeInOut(duration: 0.3)) {
+                task.sortIndex = viewModel.nextSortIndex(in: todayTasks, category: targetCategory)
+                task.category = targetCategory
+            }
+            return true
+        } isTargeted: { targeted in
+            // Could add visual feedback here if needed
+        }
+    }
+
+    private func taskRow(_ task: TodoTask) -> some View {
+        TaskRowView(
+            task: task,
+            onToggleDone: { viewModel.toggleDone(task) },
+            onDelete: { viewModel.delete(task, context: modelContext) },
+            onToggleCategory: { viewModel.toggleCategory(task, all: todayTasks) },
+            onOpenDetail: { editingTask = task }
+        )
+        .padding(.horizontal, 16)
+        .transition(.asymmetric(
+            insertion: .move(edge: .top).combined(with: .opacity),
+            removal: .move(edge: .bottom).combined(with: .opacity)
+        ))
+    }
+
+    private func dragPreview(_ task: TodoTask) -> some View {
+        Text(task.title)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+                    .shadow(radius: 4)
+            )
     }
 }

@@ -4,8 +4,13 @@ import SwiftData
 @Observable
 final class TaskListViewModel {
 
-    func addTask(title: String, category: TaskCategory, status: TaskStatus = .pending, context: ModelContext) {
-        let task = TodoTask(title: title, category: category, status: status)
+    func addTask(title: String, category: TaskCategory, status: TaskStatus = .pending, context: ModelContext, existing: [TodoTask]) {
+        let task = TodoTask(
+            title: title,
+            category: category,
+            status: status,
+            sortIndex: nextSortIndex(in: existing, category: category)
+        )
         context.insert(task)
     }
 
@@ -31,8 +36,59 @@ final class TaskListViewModel {
         task.status = .pending
     }
 
+    func toggleCategory(_ task: TodoTask, all: [TodoTask]) {
+        let destination: TaskCategory = task.category == .mustDo ? .bonus : .mustDo
+        task.sortIndex = nextSortIndex(in: all, category: destination)
+        task.category = destination
+    }
+
+    func update(_ task: TodoTask, title: String, notes: String) {
+        task.title = title
+        task.notes = notes
+    }
+
+    /// Reorder `task` to the position of `target` within its section. Symmetric
+    /// for up/down drags: remove from the source index, then insert at the
+    /// target's index. Pass `newCategory` when the drop crosses sections so the
+    /// task also lands at the dropped position in the destination. `ordered` is
+    /// the destination section's already-sorted pending array.
+    func move(_ task: TodoTask, onto target: TodoTask, into newCategory: TaskCategory? = nil, within ordered: [TodoTask]) {
+        if let newCategory {
+            task.category = newCategory
+        }
+
+        var section = ordered.filter { $0.category == task.category }
+        guard let destIndex = section.firstIndex(where: { $0.id == target.id }) else {
+            section.removeAll { $0.id == task.id }
+            section.append(task)
+            renumber(section)
+            return
+        }
+
+        if let srcIndex = section.firstIndex(where: { $0.id == task.id }) {
+            // same-section reorder: dragged item lands at the target's position
+            section.remove(at: srcIndex)
+            section.insert(task, at: min(destIndex, section.count))
+        } else {
+            // cross-section: land at the target's position
+            section.insert(task, at: destIndex)
+        }
+        renumber(section)
+    }
+
+    /// Next free index at the end of a category's tasks.
+    func nextSortIndex(in tasks: [TodoTask], category: TaskCategory) -> Int {
+        (tasks.filter { $0.category == category }.map(\.sortIndex).max() ?? -1) + 1
+    }
+
     func rolloverTasks(from allTasks: [TodoTask]) -> [TodoTask] {
         let todayStart = startOfToday()
         return allTasks.filter { $0.status == .pending && $0.createdAt < todayStart }
+    }
+
+    private func renumber(_ tasks: [TodoTask]) {
+        for (index, task) in tasks.enumerated() {
+            task.sortIndex = index
+        }
     }
 }
