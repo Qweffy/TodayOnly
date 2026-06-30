@@ -3,6 +3,7 @@ import SwiftUI
 struct RolloverView: View {
     let tasks: [TodoTask]
     let onCarry: (TodoTask) -> Void
+    let onCarryAll: () -> Void
     let onDrop: (TodoTask) -> Void
     let onMarkDone: (TodoTask) -> Void
     let onDismiss: () -> Void
@@ -52,6 +53,13 @@ struct RolloverView: View {
                     }
                     .padding(.vertical, 4)
                 }
+            }
+
+            if !tasks.isEmpty {
+                Button("Carry all to today") {
+                    onCarryAll()
+                }
+                .buttonStyle(.borderedProminent)
             }
 
             Button("Done Reviewing") {

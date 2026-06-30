@@ -7,6 +7,7 @@ struct TaskListView: View {
     @State private var showingAddSheet = false
     @State private var draggedTask: TodoTask?
     @State private var editingTask: TodoTask?
+    @State private var showingSchedule = false
 
     private let viewModel = TaskListViewModel()
 
@@ -46,6 +47,16 @@ struct TaskListView: View {
             }
             .navigationTitle("Today")
             .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingSchedule = true
+                    } label: {
+                        Image(systemName: "calendar")
+                    }
+                    .popover(isPresented: $showingSchedule) {
+                        RolloverScheduleView()
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         showingAddSheet = true

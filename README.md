@@ -1,4 +1,4 @@
-# TodayOnly
+# Just Today
 
 A minimal daily task manager. Not a todo app — it only manages **today**.
 
@@ -15,7 +15,7 @@ Native SwiftUI app with SwiftData persistence.
 1. Open `TodayOnly.xcodeproj` in Xcode
 2. `Cmd+R` to run, or:
 3. **Product → Archive → Distribute App → Custom → Copy App**
-4. Move `TodayOnly.app` to `/Applications`
+4. Move `Just Today.app` to `/Applications`
 
 **Requirements:** Xcode 15+, macOS 14+
 

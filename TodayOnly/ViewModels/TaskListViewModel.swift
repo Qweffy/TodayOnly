@@ -36,6 +36,12 @@ final class TaskListViewModel {
         task.status = .pending
     }
 
+    func carryAll(_ tasks: [TodoTask]) {
+        for task in tasks {
+            carryToToday(task)
+        }
+    }
+
     func toggleCategory(_ task: TodoTask, all: [TodoTask]) {
         let destination: TaskCategory = task.category == .mustDo ? .bonus : .mustDo
         task.sortIndex = nextSortIndex(in: all, category: destination)
