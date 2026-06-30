@@ -19,7 +19,9 @@ struct RolloverScheduleView: View {
                         get: { RolloverSchedule.isActive(day.weekday, in: activeDaysMask) },
                         set: { activeDaysMask = RolloverSchedule.setting(day.weekday, to: $0, in: activeDaysMask) }
                     ))
+                    #if os(macOS)
                     .toggleStyle(.checkbox)
+                    #endif
                 }
             }
         }

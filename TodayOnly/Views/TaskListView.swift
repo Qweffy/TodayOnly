@@ -243,13 +243,21 @@ struct TaskListView: View {
         ))
     }
 
+    private var dragPreviewBackground: Color {
+        #if os(macOS)
+        Color(nsColor: .controlBackgroundColor)
+        #else
+        Color(uiColor: .secondarySystemBackground)
+        #endif
+    }
+
     private func dragPreview(_ task: TodoTask) -> some View {
         Text(task.title)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(nsColor: .controlBackgroundColor))
+                    .fill(dragPreviewBackground)
                     .shadow(radius: 4)
             )
     }
