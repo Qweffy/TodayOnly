@@ -1,6 +1,8 @@
-# TodayOnly — Roadmap
+# Just Today - Roadmap
 
 > One "today only" task manager, in sync across every device. Open-source (MIT).
+>
+> **Progress (jun 2026):** multiplatform target builds for macOS + iOS (Fase 0 + Fase 1 done), CI pipeline added. Next: iOS UI for iPhone (Fase 2), then CloudKit sync (Fase 3).
 
 Status: planning. Estimates are rough, solo-dev relative sizes: **S** ≈ <1 día, **M** ≈ 1–3 días, **L** ≈ 3–7 días, **XL** ≈ 1–3 semanas.
 
@@ -8,10 +10,10 @@ Status: planning. Estimates are rough, solo-dev relative sizes: **S** ≈ <1 dí
 
 ## Estado actual (jun 2026)
 
-- **macOS** — SwiftUI + SwiftData, local-only. Secciones Must Do / Bonus, prompt "do it now" (<5 min), review de rollover, notas, reorder dentro de cada sección, modal de edición.
-- **Windows** — app Tauri (Rust + HTML/CSS/JS), codebase aparte, local-only.
-- **Distribución** — manual (Archive → Copy to /Applications). Sin sync.
-- **Licencia** — MIT, open-source.
+- **macOS** - SwiftUI + SwiftData, local-only. Secciones Must Do / Bonus, prompt "do it now" (<5 min), review de rollover, notas, reorder dentro de cada sección, modal de edición.
+- **Windows** - app Tauri (Rust + HTML/CSS/JS), codebase aparte, local-only.
+- **Distribución** - manual (Archive → Copy to /Applications). Sin sync.
+- **Licencia** - MIT, open-source.
 
 ---
 
@@ -24,13 +26,13 @@ Status: planning. Estimates are rough, solo-dev relative sizes: **S** ≈ <1 dí
 
 ---
 
-## Fase 0 — Lock-in y setup · **S**
+## Fase 0 - Lock-in y setup · **S**
 
 - [ ] Confirmar MVP solo-Apple + camino nativo (sin RN).
 - [ ] Fijar deployment targets: macOS 14, iOS 17 (requeridos por SwiftData).
 - [ ] Crear el target/scheme de iOS vacío y que buildee.
 
-## Fase 1 — Refactor a código compartido · **M**
+## Fase 1 - Refactor a código compartido · **M**
 
 - [ ] Mover `Models/`, `ViewModels/`, `Views/` a membership compartida (o un Swift package / framework shared).
 - [ ] Gatear las APIs solo-macOS con `#if os(macOS)`:
@@ -39,7 +41,7 @@ Status: planning. Estimates are rough, solo-dev relative sizes: **S** ≈ <1 dí
   - Cualquier uso de AppKit.
 - [ ] Verificar que todas las vistas compilan para iOS.
 
-## Fase 2 — App iOS · **L**
+## Fase 2 - App iOS · **L**
 
 - [ ] Target iOS compartiendo los fuentes.
 - [ ] Shell de iPhone: `NavigationStack`, adaptar el layout de dos secciones, el alta de tarea y el sheet de rollover al tamaño teléfono.
@@ -49,7 +51,7 @@ Status: planning. Estimates are rough, solo-dev relative sizes: **S** ≈ <1 dí
   - Flujo "do it now".
 - [ ] Ícono iOS full-bleed (ya tenemos el arte; iOS sí quiere borde a borde).
 
-## Fase 3 — Sync con CloudKit · **L**
+## Fase 3 - Sync con CloudKit · **L**
 
 - [ ] Activar capability iCloud + CloudKit (container).
 - [ ] Hacer el schema SwiftData compatible con CloudKit:
@@ -60,7 +62,7 @@ Status: planning. Estimates are rough, solo-dev relative sizes: **S** ≈ <1 dí
 - [ ] Conflictos: CloudKit hace last-writer-wins por campo; probar multi-device.
 - [ ] Fallback sin cuenta de iCloud → modo local.
 
-## Fase 4 — Ship del MVP Apple · **M**
+## Fase 4 - Ship del MVP Apple · **M**
 
 - [ ] macOS: notarización (Developer ID) y/o Mac App Store.
 - [ ] iOS: TestFlight → App Store.
@@ -69,14 +71,14 @@ Status: planning. Estimates are rough, solo-dev relative sizes: **S** ≈ <1 dí
 
 ---
 
-## Fase 5+ — Más allá de Apple (Windows + Android) · **XL**
+## Fase 5+ - Más allá de Apple (Windows + Android) · **XL**
 
 > El salto grande: CloudKit no habla con Windows/Android. Acá se mete un backend de sync.
 
 - [ ] Backend/BaaS (Supabase / Firebase / API custom + Postgres) con auth.
 - [ ] Abstraer la capa de sync para que macOS/iOS puedan cambiar de CloudKit al backend (o correr ambos).
-- [ ] **Android** — decisión pendiente: nativo (Kotlin/Compose), KMP, o rewrite mobile en React Native (reusando stack tipo SyncUp).
-- [ ] **Windows** — la app Tauri consume el mismo backend.
+- [ ] **Android** - decisión pendiente: nativo (Kotlin/Compose), KMP, o rewrite mobile en React Native (reusando stack tipo SyncUp).
+- [ ] **Windows** - la app Tauri consume el mismo backend.
 - [ ] Modelo de datos y migración unificados entre las 3+ plataformas.
 
 Esto es scope nivel producto, no feature. Se estima en detalle cuando se llegue.
