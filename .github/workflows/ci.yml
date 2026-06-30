@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: Build (macOS)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode version
+        run: xcodebuild -version
+      - name: Build
+        run: >
+          xcodebuild build
+          -project TodayOnly.xcodeproj
+          -target TodayOnly
+          -configuration Debug
+          -sdk macosx
+          CODE_SIGNING_ALLOWED=NO
+
+  ios:
+    name: Build (iOS)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: >
+          xcodebuild build
+          -project TodayOnly.xcodeproj
+          -target TodayOnly
+          -configuration Debug
+          -sdk iphonesimulator
+          CODE_SIGNING_ALLOWED=NO
