@@ -19,6 +19,9 @@
 		A1000001000000000000000C /* TaskDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000C; };
 		A1000001000000000000000D /* RolloverSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000D; };
 		A1000001000000000000000E /* RolloverScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000E; };
+		A1000001000000000000000F /* DSColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000F; };
+		A10000010000000000000010 /* DSTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000010; };
+		A10000010000000000000011 /* DSMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000011; };
 		A1000001000000000000000A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000A; };
 /* End PBXBuildFile section */
 
@@ -35,6 +38,9 @@
 		A2000001000000000000000D /* RolloverSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloverSchedule.swift; sourceTree = "<group>"; };
 		A2000001000000000000000E /* RolloverScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloverScheduleView.swift; sourceTree = "<group>"; };
 		A20000010000000000000009 /* DateHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateHelpers.swift; sourceTree = "<group>"; };
+		A2000001000000000000000F /* DSColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DSColor.swift; sourceTree = "<group>"; };
+		A20000010000000000000010 /* DSTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DSTypography.swift; sourceTree = "<group>"; };
+		A20000010000000000000011 /* DSMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DSMetrics.swift; sourceTree = "<group>"; };
 		A2000001000000000000000A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A2000001000000000000000B /* JustToday.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JustToday.entitlements; sourceTree = "<group>"; };
 		A30000010000000000000001 /* Just Today.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Just Today.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -67,6 +73,7 @@
 				A50000010000000000000004 /* ViewModels */,
 				A50000010000000000000005 /* Views */,
 				A50000010000000000000006 /* Utilities */,
+				A50000010000000000000007 /* DesignSystem */,
 				A2000001000000000000000A /* Assets.xcassets */,
 				A2000001000000000000000B /* JustToday.entitlements */,
 			);
@@ -110,6 +117,16 @@
 				A2000001000000000000000D /* RolloverSchedule.swift */,
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		A50000010000000000000007 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				A2000001000000000000000F /* DSColor.swift */,
+				A20000010000000000000010 /* DSTypography.swift */,
+				A20000010000000000000011 /* DSMetrics.swift */,
+			);
+			path = DesignSystem;
 			sourceTree = "<group>";
 		};
 		A50000010000000000000008 /* Products */ = {
@@ -195,6 +212,9 @@
 				A1000001000000000000000C /* TaskDetailView.swift in Sources */,
 				A1000001000000000000000D /* RolloverSchedule.swift in Sources */,
 				A1000001000000000000000E /* RolloverScheduleView.swift in Sources */,
+				A1000001000000000000000F /* DSColor.swift in Sources */,
+				A10000010000000000000010 /* DSTypography.swift in Sources */,
+				A10000010000000000000011 /* DSMetrics.swift in Sources */,
 				A10000010000000000000009 /* DateHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

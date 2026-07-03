@@ -9,7 +9,6 @@ struct JustTodayApp: App {
                 #if os(macOS)
                 .frame(minWidth: 400, minHeight: 500)
                 #endif
-                .preferredColorScheme(.dark)
         }
         .modelContainer(for: TodoTask.self)
         #if os(macOS)
