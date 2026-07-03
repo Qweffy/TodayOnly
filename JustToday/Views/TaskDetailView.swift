@@ -21,49 +21,54 @@ struct TaskDetailView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: DSSpacing.s4) {
             Text("Edit task")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .dsText(DSFont.title2)
+                .foregroundStyle(DSColor.textPrimary)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Title")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            field("Title") {
                 TextField("Task title", text: $title)
                     .textFieldStyle(.roundedBorder)
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Notes")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            field("Notes") {
                 TextEditor(text: $notes)
-                    .font(.body)
+                    .font(DSFont.body.font)
+                    .foregroundStyle(DSColor.textPrimary)
                     .frame(minHeight: 120)
-                    .padding(4)
+                    .padding(DSSpacing.s1)
+                    .scrollContentBackground(.hidden)
+                    .background(DSColor.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: DSRadius.sm))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.secondary.opacity(0.3))
+                        RoundedRectangle(cornerRadius: DSRadius.sm)
+                            .stroke(DSColor.border)
                     )
             }
 
             HStack {
                 Spacer()
-                Button("Cancel") {
-                    onCancel()
-                }
-                .keyboardShortcut(.cancelAction)
+                Button("Cancel") { onCancel() }
+                    .keyboardShortcut(.cancelAction)
 
-                Button("Save") {
-                    onSave(trimmedTitle, notes)
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
-                .disabled(trimmedTitle.isEmpty)
+                Button("Save") { onSave(trimmedTitle, notes) }
+                    .buttonStyle(.borderedProminent)
+                    .tint(DSColor.accent)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(trimmedTitle.isEmpty)
             }
         }
-        .padding(24)
+        .padding(DSSpacing.s6)
         .frame(minWidth: 360, minHeight: 300)
+        .background(DSColor.surfaceElevated)
+    }
+
+    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: DSSpacing.s1 + 2) {
+            Text(label)
+                .dsText(DSFont.caption1)
+                .foregroundStyle(DSColor.textSecondary)
+            content()
+        }
     }
 }
