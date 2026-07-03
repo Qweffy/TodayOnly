@@ -7,62 +7,71 @@ struct TaskRowView: View {
     var onToggleCategory: (() -> Void)? = nil
     var onOpenDetail: (() -> Void)? = nil
 
-    private var checkmarkColor: Color {
-        if task.status == .done { return .green }
-        return task.category == .mustDo ? .orange : .blue
-    }
+    @State private var hovering = false
 
+    private var isDone: Bool { task.status == .done }
     private var otherCategoryLabel: String {
         task.category == .mustDo ? "Move to Bonus" : "Move to Must Do"
     }
-
     private var otherCategoryIcon: String {
         task.category == .mustDo ? "star.fill" : "flame.fill"
     }
 
+    #if os(macOS)
+    private let checkboxGlyph: CGFloat = 17
+    private let notesGlyph: CGFloat = 14
+    #else
+    private let checkboxGlyph: CGFloat = 22
+    private let notesGlyph: CGFloat = 16
+    #endif
+
     var body: some View {
-        HStack(spacing: 12) {
-            Button(action: {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    onToggleDone()
-                }
-            }) {
-                Image(systemName: task.status == .done ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
-                    .foregroundStyle(checkmarkColor)
+        HStack(spacing: DSSpacing.gutter) {
+            // Checkbox — neutral ring when pending, green filled check when done
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) { onToggleDone() }
+            } label: {
+                Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: checkboxGlyph))
+                    .foregroundStyle(isDone ? DSColor.done : DSColor.textTertiary)
                     .contentTransition(.symbolEffect(.replace))
+                    .frame(width: DSSpacing.hitTarget, height: DSSpacing.hitTarget)
             }
             .buttonStyle(.plain)
 
             if !task.notes.isEmpty {
                 Image(systemName: "note.text")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: notesGlyph))
+                    .foregroundStyle(DSColor.textTertiary)
             }
 
             Text(task.title)
-                .strikethrough(task.status == .done)
-                .foregroundStyle(task.status == .done ? .secondary : .primary)
+                .dsText(DSFont.body)
+                .foregroundStyle(isDone ? DSColor.textTertiary : DSColor.textPrimary)
+                .strikethrough(isDone, color: DSColor.textQuaternary)
+                .lineLimit(1)
 
-            Spacer()
+            Spacer(minLength: 0)
 
-            Button(action: {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    onDelete()
-                }
-            }) {
+            // Delete — hover-reveal on macOS, subtle on iOS (context menu is the primary path)
+            Button {
+                withAnimation(.easeInOut(duration: 0.3)) { onDelete() }
+            } label: {
                 Image(systemName: "trash")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 13))
+                    .foregroundStyle(DSColor.textSecondary)
             }
             .buttonStyle(.plain)
-            .opacity(0.5)
+            .opacity(trashOpacity)
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, DSSpacing.rowPadX)
+        .frame(minHeight: DSSpacing.rowMinHeight)
+        .background(rowBackground)
         .contentShape(Rectangle())
-        .onTapGesture {
-            onOpenDetail?()
-        }
+        .onTapGesture { onOpenDetail?() }
+        #if os(macOS)
+        .onHover { hovering = $0 }
+        #endif
         .contextMenu {
             if let onOpenDetail {
                 Button {
@@ -71,24 +80,34 @@ struct TaskRowView: View {
                     Label("Edit", systemImage: "pencil")
                 }
             }
-
             if let onToggleCategory {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        onToggleCategory()
-                    }
+                    withAnimation(.easeInOut(duration: 0.3)) { onToggleCategory() }
                 } label: {
                     Label(otherCategoryLabel, systemImage: otherCategoryIcon)
                 }
             }
-
             Button(role: .destructive) {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    onDelete()
-                }
+                withAnimation(.easeInOut(duration: 0.3)) { onDelete() }
             } label: {
                 Label("Delete", systemImage: "trash")
             }
         }
+    }
+
+    private var trashOpacity: Double {
+        #if os(macOS)
+        hovering ? 0.7 : 0
+        #else
+        0.35
+        #endif
+    }
+
+    private var rowBackground: Color {
+        #if os(macOS)
+        hovering ? DSColor.fillQuaternary : DSColor.surface
+        #else
+        DSColor.surface
+        #endif
     }
 }

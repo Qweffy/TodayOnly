@@ -22,19 +22,24 @@ struct TaskListView: View {
         )
     }
 
-    private var mustDoTasks: [TodoTask] {
-        orderedTasks(in: .mustDo)
-    }
-
-    private var bonusTasks: [TodoTask] {
-        orderedTasks(in: .bonus)
-    }
+    private var mustDoTasks: [TodoTask] { orderedTasks(in: .mustDo) }
+    private var bonusTasks: [TodoTask] { orderedTasks(in: .bonus) }
 
     private func orderedTasks(in category: TaskCategory) -> [TodoTask] {
         todayTasks
             .filter { $0.category == category }
             .sorted { $0.sortIndex != $1.sortIndex ? $0.sortIndex < $1.sortIndex : $0.createdAt < $1.createdAt }
     }
+
+    #if os(macOS)
+    private let headerIconSize: CGFloat = 15
+    private let emptyCircle: CGFloat = 48
+    private let emptySun: CGFloat = 24
+    #else
+    private let headerIconSize: CGFloat = 18
+    private let emptyCircle: CGFloat = 60
+    private let emptySun: CGFloat = 30
+    #endif
 
     var body: some View {
         NavigationStack {
@@ -53,6 +58,7 @@ struct TaskListView: View {
                     } label: {
                         Image(systemName: "calendar")
                     }
+                    .foregroundStyle(DSColor.textSecondary)
                     .popover(isPresented: $showingSchedule) {
                         RolloverScheduleView()
                     }
@@ -63,6 +69,7 @@ struct TaskListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .foregroundStyle(DSColor.accent)
                 }
             }
             .sheet(isPresented: $showingAddSheet) {
@@ -79,9 +86,7 @@ struct TaskListView: View {
                         }
                         showingAddSheet = false
                     },
-                    onCancel: {
-                        showingAddSheet = false
-                    }
+                    onCancel: { showingAddSheet = false }
                 )
             }
             .sheet(item: $editingTask) { task in
@@ -93,56 +98,55 @@ struct TaskListView: View {
                         }
                         editingTask = nil
                     },
-                    onCancel: {
-                        editingTask = nil
-                    }
+                    onCancel: { editingTask = nil }
                 )
             }
         }
+        .tint(DSColor.accent)
     }
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "checkmark.seal")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
+        VStack(spacing: DSSpacing.s2) {
+            ZStack {
+                Circle()
+                    .fill(DSColor.surfaceElevated)
+                    .frame(width: emptyCircle, height: emptyCircle)
+                Image(systemName: "sun.max")
+                    .font(.system(size: emptySun))
+                    .foregroundStyle(DSColor.textTertiary)
+            }
+            .padding(.bottom, DSSpacing.s2)
+
             Text("Nothing for today")
-                .font(.title3)
-                .foregroundStyle(.secondary)
-            Text("Tap + to add a task")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+                .font(.system(size: DSFont.title3.size, weight: .bold, design: .rounded))
+                .foregroundStyle(DSColor.textPrimary)
+
+            Text("Add the one thing that matters, or enjoy the quiet.")
+                .dsText(DSFont.subheadline)
+                .foregroundStyle(DSColor.textSecondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 260)
         }
+        .padding(DSSpacing.s6)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(DSColor.bgBase)
     }
 
     private var taskList: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: DSSpacing.sectionGap) {
                 if !mustDoTasks.isEmpty {
-                    sectionCard(
-                        title: "Must Do",
-                        icon: "flame.fill",
-                        tint: .orange,
-                        targetCategory: .mustDo,
-                        tasks: mustDoTasks
-                    )
+                    sectionCard(title: "Must Do", icon: "flame.fill", tint: DSColor.accent, targetCategory: .mustDo, tasks: mustDoTasks)
                 }
-
                 if !bonusTasks.isEmpty {
-                    sectionCard(
-                        title: "Bonus",
-                        icon: "star.fill",
-                        tint: .blue,
-                        targetCategory: .bonus,
-                        tasks: bonusTasks
-                    )
+                    sectionCard(title: "Bonus", icon: "star.fill", tint: DSColor.bonus, targetCategory: .bonus, tasks: bonusTasks)
                 }
             }
-            .padding()
+            .padding(DSSpacing.screenMargin)
             .animation(.easeInOut(duration: 0.3), value: mustDoTasks.map(\.id))
             .animation(.easeInOut(duration: 0.3), value: bonusTasks.map(\.id))
         }
+        .background(DSColor.bgBase)
     }
 
     private func sectionCard(
@@ -155,62 +159,74 @@ struct TaskListView: View {
         let pending = tasks.filter { $0.status != .done }
         let done = tasks.filter { $0.status == .done }
         let allDone = pending.isEmpty && !done.isEmpty
+        let rows = pending + done
 
-        return VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 6) {
+        return VStack(spacing: 0) {
+            // Header
+            HStack(spacing: DSSpacing.gutter) {
                 Image(systemName: icon)
-                    .foregroundStyle(tint)
-                    .font(.subheadline)
+                    .font(.system(size: headerIconSize))
+                    .foregroundStyle(allDone ? DSColor.done : tint)
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(tint)
+                    .dsText(DSFont.title2)
+                    .foregroundStyle(DSColor.textPrimary)
                 Spacer()
-                Text("\(pending.count) left")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
-
-            Divider()
-                .padding(.horizontal, 16)
-
-            ForEach(pending) { task in
-                taskRow(task)
-                    .draggable(task.id.uuidString) {
-                        dragPreview(task)
+                if allDone {
+                    HStack(spacing: 5) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 15))
+                        Text("All done")
+                            .dsText(DSFont.subheadline)
+                            .fontWeight(.semibold)
                     }
-                    .dropDestination(for: String.self) { droppedIDs, _ in
-                        guard let idStr = droppedIDs.first,
-                              let uuid = UUID(uuidString: idStr),
-                              uuid != task.id,
-                              let dragged = todayTasks.first(where: { $0.id == uuid }) else {
-                            return false
-                        }
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            if dragged.category == task.category {
-                                viewModel.move(dragged, onto: task, within: pending)
-                            } else {
-                                viewModel.move(dragged, onto: task, into: task.category, within: pending)
-                            }
-                        }
-                        return true
-                    }
+                    .foregroundStyle(DSColor.done)
+                } else {
+                    Text("\(pending.count) left")
+                        .dsText(DSFont.subheadline)
+                        .foregroundStyle(DSColor.textTertiary)
+                        .monospacedDigit()
+                }
             }
+            .padding(.horizontal, DSSpacing.rowPadX)
+            .padding(.vertical, DSSpacing.rowPadY)
+            .frame(minHeight: DSSpacing.hitTarget)
 
-            if !done.isEmpty {
-                ForEach(done) { task in
+            Rectangle()
+                .fill(DSColor.separator)
+                .frame(height: 1)
+                .padding(.horizontal, DSSpacing.rowPadX)
+
+            // Rows (pending first, done after), hairline-separated
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, task in
+                if index > 0 {
+                    Rectangle().fill(DSColor.separator).frame(height: 1)
+                }
+                if task.status != .done {
                     taskRow(task)
-                        .opacity(0.6)
+                        .draggable(task.id.uuidString) { dragPreview(task) }
+                        .dropDestination(for: String.self) { droppedIDs, _ in
+                            guard let idStr = droppedIDs.first,
+                                  let uuid = UUID(uuidString: idStr),
+                                  uuid != task.id,
+                                  let dragged = todayTasks.first(where: { $0.id == uuid }) else {
+                                return false
+                            }
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                if dragged.category == task.category {
+                                    viewModel.move(dragged, onto: task, within: pending)
+                                } else {
+                                    viewModel.move(dragged, onto: task, into: task.category, within: pending)
+                                }
+                            }
+                            return true
+                        }
+                } else {
+                    taskRow(task)
                 }
             }
         }
-        .padding(.bottom, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(allDone ? Color.green.opacity(0.08) : tint.opacity(0.1))
-        )
+        .background(sectionBackground(allDone: allDone))
+        .clipShape(RoundedRectangle(cornerRadius: DSRadius.lg))
         .dropDestination(for: String.self) { droppedIDs, _ in
             guard let idStr = droppedIDs.first,
                   let uuid = UUID(uuidString: idStr),
@@ -223,8 +239,14 @@ struct TaskListView: View {
                 task.category = targetCategory
             }
             return true
-        } isTargeted: { targeted in
-            // Could add visual feedback here if needed
+        } isTargeted: { _ in }
+    }
+
+    @ViewBuilder
+    private func sectionBackground(allDone: Bool) -> some View {
+        ZStack {
+            DSColor.surface
+            if allDone { DSColor.done.opacity(0.10) }
         }
     }
 
@@ -236,29 +258,22 @@ struct TaskListView: View {
             onToggleCategory: { viewModel.toggleCategory(task, all: todayTasks) },
             onOpenDetail: { editingTask = task }
         )
-        .padding(.horizontal, 16)
         .transition(.asymmetric(
             insertion: .move(edge: .top).combined(with: .opacity),
             removal: .move(edge: .bottom).combined(with: .opacity)
         ))
     }
 
-    private var dragPreviewBackground: Color {
-        #if os(macOS)
-        Color(nsColor: .controlBackgroundColor)
-        #else
-        Color(uiColor: .secondarySystemBackground)
-        #endif
-    }
-
     private func dragPreview(_ task: TodoTask) -> some View {
         Text(task.title)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .dsText(DSFont.body)
+            .foregroundStyle(DSColor.textPrimary)
+            .padding(.horizontal, DSSpacing.s3)
+            .padding(.vertical, DSSpacing.s2)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(dragPreviewBackground)
-                    .shadow(radius: 4)
+                RoundedRectangle(cornerRadius: DSRadius.md)
+                    .fill(DSColor.surfaceElevated)
+                    .dsShadow(.raised)
             )
     }
 }
