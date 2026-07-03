@@ -12,7 +12,7 @@ Native SwiftUI app with SwiftData persistence.
 
 ### Install from source
 
-1. Open `TodayOnly.xcodeproj` in Xcode
+1. Open `JustToday.xcodeproj` in Xcode
 2. `Cmd+R` to run, or:
 3. **Product → Archive → Distribute App → Custom → Copy App**
 4. Move `Just Today.app` to `/Applications`

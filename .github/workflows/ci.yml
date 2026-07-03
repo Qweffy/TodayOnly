@@ -20,8 +20,8 @@ jobs:
       - name: Build
         run: >
           xcodebuild build
-          -project TodayOnly.xcodeproj
-          -target TodayOnly
+          -project JustToday.xcodeproj
+          -target JustToday
           -configuration Debug
           -sdk macosx
           CODE_SIGNING_ALLOWED=NO
@@ -34,8 +34,8 @@ jobs:
       - name: Build
         run: >
           xcodebuild build
-          -project TodayOnly.xcodeproj
-          -target TodayOnly
+          -project JustToday.xcodeproj
+          -target JustToday
           -configuration Debug
           -sdk iphonesimulator
           CODE_SIGNING_ALLOWED=NO

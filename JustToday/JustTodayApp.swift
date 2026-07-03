@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct TodayOnlyApp: App {
+struct JustTodayApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
