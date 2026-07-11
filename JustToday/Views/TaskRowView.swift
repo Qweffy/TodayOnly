@@ -16,6 +16,9 @@ struct TaskRowView: View {
     private var otherCategoryIcon: String {
         task.category == .mustDo ? "star.fill" : "flame.fill"
     }
+    private var isCarried: Bool {
+        task.status == .pending && !Calendar.current.isDateInToday(task.createdAt)
+    }
 
     #if os(macOS)
     private let checkboxGlyph: CGFloat = 17
@@ -43,6 +46,12 @@ struct TaskRowView: View {
                 Image(systemName: "note.text")
                     .font(.system(size: notesGlyph))
                     .foregroundStyle(DSColor.textTertiary)
+            }
+
+            if isCarried {
+                Image(systemName: "arrow.turn.up.left")
+                    .font(.system(size: notesGlyph - 2))
+                    .foregroundStyle(DSColor.textQuaternary)
             }
 
             Text(task.title)

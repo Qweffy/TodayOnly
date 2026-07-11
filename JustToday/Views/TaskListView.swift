@@ -16,7 +16,7 @@ struct TaskListView: View {
         let end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
         _todayTasks = Query(
             filter: #Predicate<TodoTask> { task in
-                task.createdAt >= start && task.createdAt < end
+                task.createdAt < end
             },
             sort: \TodoTask.createdAt
         )
@@ -26,8 +26,10 @@ struct TaskListView: View {
     private var bonusTasks: [TodoTask] { orderedTasks(in: .bonus) }
 
     private func orderedTasks(in category: TaskCategory) -> [TodoTask] {
-        todayTasks
-            .filter { $0.category == category }
+        // Show tasks created today OR still-pending items carried over from earlier days.
+        let today = startOfToday()
+        return todayTasks
+            .filter { $0.category == category && ($0.createdAt >= today || $0.status == .pending) }
             .sorted { $0.sortIndex != $1.sortIndex ? $0.sortIndex < $1.sortIndex : $0.createdAt < $1.createdAt }
     }
 
