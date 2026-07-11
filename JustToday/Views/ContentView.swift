@@ -33,6 +33,10 @@ struct ContentView: View {
                     onDismiss: { showRollover = false }
                 )
                 .interactiveDismissDisabled()
+                #if os(iOS)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                #endif
             }
             .onAppear {
                 guard !rolloverChecked else { return }

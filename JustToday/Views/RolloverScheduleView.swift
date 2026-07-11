@@ -29,7 +29,11 @@ struct RolloverScheduleView: View {
             .foregroundStyle(DSColor.textPrimary)
         }
         .padding()
+        #if os(macOS)
         .frame(width: 240)
+        #else
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        #endif
         .background(DSColor.surfaceElevated)
     }
 }

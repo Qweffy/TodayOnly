@@ -49,7 +49,11 @@ struct TaskListView: View {
                 if todayTasks.isEmpty {
                     emptyState
                 } else {
+                    #if os(iOS)
+                    iosList
+                    #else
                     taskList
+                    #endif
                 }
             }
             .navigationTitle("Today")
@@ -61,9 +65,11 @@ struct TaskListView: View {
                         Image(systemName: "calendar")
                     }
                     .foregroundStyle(DSColor.textSecondary)
+                    #if os(macOS)
                     .popover(isPresented: $showingSchedule) {
                         RolloverScheduleView()
                     }
+                    #endif
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -90,6 +96,10 @@ struct TaskListView: View {
                     },
                     onCancel: { showingAddSheet = false }
                 )
+                #if os(iOS)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                #endif
             }
             .sheet(item: $editingTask) { task in
                 TaskDetailView(
@@ -102,7 +112,18 @@ struct TaskListView: View {
                     },
                     onCancel: { editingTask = nil }
                 )
+                #if os(iOS)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                #endif
             }
+            #if os(iOS)
+            .sheet(isPresented: $showingSchedule) {
+                RolloverScheduleView()
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.visible)
+            }
+            #endif
         }
         .tint(DSColor.accent)
     }
@@ -123,7 +144,7 @@ struct TaskListView: View {
                 .font(.system(size: DSFont.title3.size, weight: .bold, design: .rounded))
                 .foregroundStyle(DSColor.textPrimary)
 
-            Text("Add the one thing that matters, or enjoy the quiet.")
+            Text("Add the one thing that matters today.")
                 .dsText(DSFont.subheadline)
                 .foregroundStyle(DSColor.textSecondary)
                 .multilineTextAlignment(.center)
@@ -134,6 +155,7 @@ struct TaskListView: View {
         .background(DSColor.bgBase)
     }
 
+    #if os(macOS)
     private var taskList: some View {
         ScrollView {
             VStack(spacing: DSSpacing.sectionGap) {
@@ -278,4 +300,157 @@ struct TaskListView: View {
                     .dsShadow(.raised)
             )
     }
+    #endif
+
+    // MARK: - iOS native list (inset-grouped + swipe actions)
+    #if os(iOS)
+    private var iosList: some View {
+        let pendingLeft = (mustDoTasks + bonusTasks).filter { $0.status == .pending }.count
+        return List {
+            if pendingLeft == 0 {
+                allDoneBanner
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 16, trailing: 16))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
+            iosSection("Must Do", icon: "flame.fill", tint: DSColor.accent, category: .mustDo, tasks: mustDoTasks)
+            iosSection("Bonus", icon: "star.fill", tint: DSColor.bonus, category: .bonus, tasks: bonusTasks)
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(DSColor.bgBase)
+    }
+
+    @ViewBuilder
+    private func iosSection(_ title: String, icon: String, tint: Color, category: TaskCategory, tasks: [TodoTask]) -> some View {
+        if !tasks.isEmpty {
+            let pending = tasks.filter { $0.status != .done }
+            let done = tasks.filter { $0.status == .done }
+            let rows = pending + done
+            Section {
+                ForEach(rows, id: \.id) { task in
+                    iosRow(task)
+                }
+                .onMove { from, to in
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        viewModel.reorder(rows, fromOffsets: from, toOffset: to)
+                    }
+                }
+            } header: {
+                iosSectionHeader(title, icon: icon, tint: tint, count: pending.count)
+            }
+        }
+    }
+
+    private func iosSectionHeader(_ title: String, icon: String, tint: Color, count: Int) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 18))
+                .foregroundStyle(tint)
+            Text(title)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(DSColor.textPrimary)
+            Spacer()
+            Text("\(count) left")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(DSColor.textTertiary)
+                .monospacedDigit()
+        }
+        .textCase(nil)
+        .padding(.bottom, 2)
+    }
+
+    private func iosRow(_ task: TodoTask) -> some View {
+        let isDone = task.status == .done
+        let isCarried = task.status == .pending && !Calendar.current.isDateInToday(task.createdAt)
+        return HStack(spacing: 12) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) { viewModel.toggleDone(task) }
+            } label: {
+                Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(isDone ? DSColor.done : DSColor.textTertiary)
+                    .contentTransition(.symbolEffect(.replace))
+            }
+            .buttonStyle(.plain)
+
+            if isCarried {
+                Image(systemName: "arrow.turn.up.left")
+                    .font(.system(size: 13))
+                    .foregroundStyle(DSColor.textQuaternary)
+            }
+
+            Text(task.title)
+                .dsText(DSFont.body)
+                .foregroundStyle(isDone ? DSColor.textTertiary : DSColor.textPrimary)
+                .strikethrough(isDone, color: DSColor.textQuaternary)
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+
+            if !task.notes.isEmpty {
+                Image(systemName: "note.text")
+                    .font(.system(size: 16))
+                    .foregroundStyle(DSColor.textTertiary)
+            }
+        }
+        .padding(.vertical, 2)
+        .listRowBackground(DSColor.surface)
+        .contentShape(Rectangle())
+        .onTapGesture { editingTask = task }
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            Button {
+                withAnimation { viewModel.toggleDone(task) }
+            } label: {
+                Label(isDone ? "Undo" : "Done", systemImage: isDone ? "arrow.uturn.left" : "checkmark")
+            }
+            .tint(DSColor.done)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive) {
+                withAnimation { viewModel.delete(task, context: modelContext) }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .contextMenu {
+            Button {
+                editingTask = task
+            } label: {
+                Label("Edit", systemImage: "pencil")
+            }
+            Button {
+                withAnimation { viewModel.toggleCategory(task, all: todayTasks) }
+            } label: {
+                Label(task.category == .mustDo ? "Move to Bonus" : "Move to Must Do",
+                      systemImage: task.category == .mustDo ? "star.fill" : "flame.fill")
+            }
+            Button(role: .destructive) {
+                withAnimation { viewModel.delete(task, context: modelContext) }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+    }
+
+    private var allDoneBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 26))
+                .foregroundStyle(DSColor.done)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("That's everything")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(DSColor.textPrimary)
+                Text("Enjoy the rest of your day.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(DSColor.textSecondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(DSColor.doneTint)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+    #endif
 }

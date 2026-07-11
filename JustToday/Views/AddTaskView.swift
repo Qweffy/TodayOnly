@@ -36,7 +36,11 @@ struct AddTaskView: View {
             .padding(.bottom, DSSpacing.s6)
             .padding(.top, DSSpacing.s1)
         }
+        #if os(macOS)
         .frame(width: 320)
+        #else
+        .frame(maxWidth: .infinity)
+        #endif
         .background(DSColor.surfaceElevated)
     }
 

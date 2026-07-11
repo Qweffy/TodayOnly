@@ -59,7 +59,11 @@ struct TaskDetailView: View {
             }
         }
         .padding(DSSpacing.s6)
+        #if os(macOS)
         .frame(minWidth: 360, minHeight: 300)
+        #else
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        #endif
         .background(DSColor.surfaceElevated)
     }
 

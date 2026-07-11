@@ -87,6 +87,13 @@ final class TaskListViewModel {
         (tasks.filter { $0.category == category }.map(\.sortIndex).max() ?? -1) + 1
     }
 
+    /// Reorder a section's rows (from a List `.onMove`) and renumber their sortIndex.
+    func reorder(_ ordered: [TodoTask], fromOffsets: IndexSet, toOffset: Int) {
+        var arr = ordered
+        arr.move(fromOffsets: fromOffsets, toOffset: toOffset)
+        renumber(arr)
+    }
+
     func rolloverTasks(from allTasks: [TodoTask]) -> [TodoTask] {
         let todayStart = startOfToday()
         return allTasks.filter { $0.status == .pending && $0.createdAt < todayStart }
